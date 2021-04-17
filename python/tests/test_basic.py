@@ -26,8 +26,9 @@ from chainlib.eth.contract import (
 from hexathon import add_0x
 
 # local imports
-from eth_void_owner import (
-        VoidOwner,
+from eth_owner.void import VoidOwner
+from eth_owner import (
+        Owned,
         data_dir,
         )
 
