@@ -69,20 +69,40 @@ class Test(EthTesterCase):
         self.owned_demo_address = r['contract_address']
 
 
-    def test_takeover(self):
-        
+    def test_accept(self):
         nonce_oracle = RPCNonceOracle(self.accounts[0], self.conn)
         txf = TxFactory(self.chain_spec, signer=self.signer, nonce_oracle=nonce_oracle)
 
-        enc = ABIContractEncoder()
-        enc.method('transferOwnership')
-        enc.typ(ABIContractType.ADDRESS)
-        enc.address(self.address)
-        data = enc.get()
-        tx = txf.template(self.accounts[0], self.owned_demo_address, use_nonce=True)
-        tx = txf.set_code(tx, data)
-        (tx_hash_hex, o) = txf.finalize(tx)
+        c = Owned(self.chain_spec, signer=self.signer, nonce_oracle=nonce_oracle)
+        (tx_hash_hex, o) = c.transfer_ownership(self.accounts[0], self.owned_demo_address, self.accounts[1])
+        r = self.conn.do(o)
 
+        o = receipt(tx_hash_hex)
+        r = self.conn.do(o)
+        self.assertEqual(r['status'], 1)
+
+        nonce_oracle = RPCNonceOracle(self.accounts[1], self.conn)
+        c = Owned(self.chain_spec, signer=self.signer, nonce_oracle=nonce_oracle)
+        (tx_hash_hex, o) = c.accept_ownership(self.accounts[1], self.owned_demo_address)
+       
+        r = self.conn.do(o)
+
+        o = receipt(tx_hash_hex)
+        r = self.conn.do(o)
+        self.assertEqual(r['status'], 1)
+
+        o = c.owner(self.owned_demo_address, sender_address=self.accounts[0])
+        r = self.conn.do(o)
+        owner_address = abi_decode_single(ABIContractType.ADDRESS, r)
+        self.assertEqual(owner_address, self.accounts[1])
+
+
+    def test_void(self):
+        nonce_oracle = RPCNonceOracle(self.accounts[0], self.conn)
+        txf = TxFactory(self.chain_spec, signer=self.signer, nonce_oracle=nonce_oracle)
+
+        c = Owned(self.chain_spec, signer=self.signer, nonce_oracle=nonce_oracle)
+        (tx_hash_hex, o) = c.transfer_ownership(self.accounts[0], self.owned_demo_address, self.address)
         r = self.conn.do(o)
 
         o = receipt(tx_hash_hex)
@@ -98,14 +118,8 @@ class Test(EthTesterCase):
         r = self.conn.do(o)
         self.assertEqual(r['status'], 1)
 
-        o = jsonrpc_template()
-        o['method'] = 'eth_call'
-        enc = ABIContractEncoder()
-        enc.method('owner')
-        data = add_0x(enc.get())
-        tx = txf.template(self.accounts[0], self.owned_demo_address)
-        tx = txf.set_code(tx, data)
-        o['params'].append(txf.normalize(tx))
+        c = Owned(self.chain_spec, signer=self.signer, nonce_oracle=nonce_oracle)
+        o = c.owner(self.owned_demo_address, sender_address=self.accounts[0])
 
         r = self.conn.do(o)
         owner_address = abi_decode_single(ABIContractType.ADDRESS, r)

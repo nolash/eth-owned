@@ -18,6 +18,7 @@ from chainlib.eth.constant import ZERO_ADDRESS
 from chainlib.jsonrpc import (
         jsonrpc_template,
         )
+from hexathon import add_0x
 
 logg = logging.getLogger()
 
@@ -29,7 +30,7 @@ class Owned(TxFactory):
 
     interfaces = None
 
-    def owner(self, contract_address, idx, sender_address=ZERO_ADDRESS):
+    def owner(self, contract_address, sender_address=ZERO_ADDRESS):
         o = jsonrpc_template()
         o['method'] = 'eth_call'
         enc = ABIContractEncoder()
@@ -53,7 +54,7 @@ class Owned(TxFactory):
         return tx
 
 
-    def accept_ownership(self, sender_address, contract_address, address, tx_format=TxFormat.JSONRPC):
+    def accept_ownership(self, sender_address, contract_address, tx_format=TxFormat.JSONRPC):
         enc = ABIContractEncoder()
         enc.method('acceptOwnership')
         data = enc.get()
