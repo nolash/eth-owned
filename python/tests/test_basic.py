@@ -4,97 +4,111 @@ import unittest
 import json
 import logging
 
-# third-party imports
-import web3
-import eth_tester
-import eth_abi
+# external imports
+from chainlib.eth.unittest.ethtester import EthTesterCase
+from chainlib.connection import RPCConnection
+from chainlib.eth.address import to_checksum_address
+from chainlib.eth.nonce import RPCNonceOracle
+from chainlib.eth.tx import (
+        receipt,
+        transaction,
+        TxFormat,
+        TxFactory,
+        )
+from chainlib.eth.contract import (
+        abi_decode_single,
+        ABIContractType,
+        )
+from chainlib.jsonrpc import jsonrpc_template
+from chainlib.eth.contract import (
+        ABIContractEncoder,
+        )
+from hexathon import add_0x
+
+# local imports
+from eth_void_owner import (
+        VoidOwner,
+        data_dir,
+        )
 
 logging.basicConfig(level=logging.DEBUG)
 logg = logging.getLogger()
 
-logging.getLogger('web3').setLevel(logging.WARNING)
-logging.getLogger('eth.vm').setLevel(logging.WARNING)
-
 testdir = os.path.dirname(__file__)
 
 
-class Test(unittest.TestCase):
+class Test(EthTesterCase):
 
-    contract = None
 
     def setUp(self):
-        eth_params = eth_tester.backends.pyevm.main.get_default_genesis_params({
-            'gas_limit': 9000000,
-            })
+        super(Test, self).setUp()
+        self.conn = RPCConnection.connect(self.chain_spec, 'default')
+        nonce_oracle = RPCNonceOracle(self.accounts[0], self.conn)
+        self.o = VoidOwner(self.chain_spec, signer=self.signer, nonce_oracle=nonce_oracle)
+        (tx_hash_hex, o) = self.o.constructor(self.accounts[0])
+        r = self.conn.do(o)
+        logg.debug('deployed with hash {}'.format(r))
 
-        f = open(os.path.join(testdir, '../../solidity/Owned.bin'), 'r')
-        self.bytecode_owned = f.read()
+        o = receipt(tx_hash_hex)
+        r = self.conn.do(o)
+        self.address = r['contract_address']
+
+        f = open(os.path.join(data_dir, 'Owned.bin'), 'r')
+        b = f.read()
         f.close()
+       
+        txf = TxFactory(self.chain_spec, signer=self.signer, nonce_oracle=nonce_oracle)
+        tx = txf.template(self.accounts[0], None, use_nonce=True)
+        tx = txf.set_code(tx, b)
+        (tx_hash_hex, o) = txf.build(tx)
+        r = self.conn.do(o)
 
-        f = open(os.path.join(testdir, '../../solidity/Owned.json'), 'r')
-        self.abi_owned = json.load(f)
-        f.close()
-
-        f = open(os.path.join(testdir, '../../solidity/VoidOwner.bin'), 'r')
-        self.bytecode_void = f.read()
-        f.close()
-
-        f = open(os.path.join(testdir, '../../solidity/VoidOwner.json'), 'r')
-        self.abi_void = json.load(f)
-        f.close()
-
-        backend = eth_tester.PyEVMBackend(eth_params)
-        self.eth_tester =  eth_tester.EthereumTester(backend)
-        provider = web3.Web3.EthereumTesterProvider(self.eth_tester)
-        self.w3 = web3.Web3(provider)
-
-        c = self.w3.eth.contract(abi=self.abi_owned, bytecode=self.bytecode_owned)
-        tx_hash = c.constructor().transact()
-        r = self.w3.eth.getTransactionReceipt(tx_hash)
-        self.assertEqual(r.status, 1)
-        self.contract_owned = self.w3.eth.contract(abi=self.abi_owned, address=r.contractAddress)
-
-        c = self.w3.eth.contract(abi=self.abi_void, bytecode=self.bytecode_void)
-        tx_hash = c.constructor().transact()
-        r = self.w3.eth.getTransactionReceipt(tx_hash)
-        self.assertEqual(r.status, 1)
-        self.contract_void = self.w3.eth.contract(abi=self.abi_void, address=r.contractAddress)
+        o = receipt(tx_hash_hex)
+        r = self.conn.do(o)
+        self.owned_demo_address = r['contract_address']
 
 
-    def tearDown(self):
-        pass
+    def test_takeover(self):
+        
+        nonce_oracle = RPCNonceOracle(self.accounts[0], self.conn)
+        txf = TxFactory(self.chain_spec, signer=self.signer, nonce_oracle=nonce_oracle)
 
+        enc = ABIContractEncoder()
+        enc.method('transferOwnership')
+        enc.typ(ABIContractType.ADDRESS)
+        enc.address(self.address)
+        data = enc.get()
+        tx = txf.template(self.accounts[0], self.owned_demo_address, use_nonce=True)
+        tx = txf.set_code(tx, data)
+        (tx_hash_hex, o) = txf.finalize(tx)
 
-    def test_hello(self):
-        owner = self.contract_owned.functions.owner().call()
-        self.assertEqual(self.w3.eth.accounts[0], owner)
+        r = self.conn.do(o)
 
+        o = receipt(tx_hash_hex)
+        r = self.conn.do(o)
+        self.assertEqual(r['status'], 1)
 
-    def test_accept(self):
-        owner = self.contract_owned.functions.owner().call()
-    
-        tx_hash = self.contract_owned.functions.transferOwnership(self.contract_void.address).transact()
-        r = self.w3.eth.getTransactionReceipt(tx_hash)
-        self.assertEqual(r.status, 1)
+        c = VoidOwner(self.chain_spec, signer=self.signer, nonce_oracle=nonce_oracle)
+        (tx_hash_hex, o) = c.take_ownership(self.accounts[0], self.address, self.owned_demo_address)
 
-        tx_hash = self.contract_void.functions.omNom(self.contract_owned.address).transact()
-        r = self.w3.eth.getTransactionReceipt(tx_hash)
-        self.assertEqual(r.status, 1)
-        logged = False
-        for l in r.logs:
-            logg.debug('log {}'.format(l))
-            if l.topics[0].hex() == '0xdc3c82f4776932041f15a08f769aadd6ed44c2a975e64bbf0fde8cf812f8b6b8':
-                matchLogAddress = '0x{:>064}'.format(self.contract_owned.address[2:].lower()
-                self.assertEqual(l.data, matchLogAddress))
-                logged = True
+        r = self.conn.do(o)
 
-        self.assertTrue(logged)
+        o = receipt(tx_hash_hex)
+        r = self.conn.do(o)
+        self.assertEqual(r['status'], 1)
 
-        owner = self.contract_owned.functions.owner().call()
-        self.assertEqual(owner, self.contract_void.address)
-    
-        tx = self.contract_owned.functions.transferOwnership(self.contract_void.address)
-        self.assertRaises(eth_tester.exceptions.TransactionFailed, tx.transact)
+        o = jsonrpc_template()
+        o['method'] = 'eth_call'
+        enc = ABIContractEncoder()
+        enc.method('owner')
+        data = add_0x(enc.get())
+        tx = txf.template(self.accounts[0], self.owned_demo_address)
+        tx = txf.set_code(tx, data)
+        o['params'].append(txf.normalize(tx))
+
+        r = self.conn.do(o)
+        owner_address = abi_decode_single(ABIContractType.ADDRESS, r)
+        self.assertEqual(owner_address, self.address)
 
 
 if __name__ == '__main__':
