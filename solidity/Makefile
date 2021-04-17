@@ -12,7 +12,7 @@ test: all
 	python ../python/tests/test_basic.py
 
 install: all
-	cp -v VoidOwner.{json,bin} ../python/eth_owner/data/
-	cp -v Owned.{json,bin} ../python/eth_owner/data/
+	cp -v VoidOwner.{json,bin} ../python/eth_owned/data/
+	cp -v Owned.{json,bin} ../python/eth_owned/data/
 	
 .PHONY: test install
