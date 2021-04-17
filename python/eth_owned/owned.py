@@ -62,3 +62,9 @@ class Owned(TxFactory):
         tx = self.set_code(tx, data)
         tx = self.finalize(tx, tx_format)        
         return tx
+
+
+    @classmethod
+    def parse_owner(self, v):
+        return abi_decode_single(ABIContractType.ADDRESS, v)
+

@@ -55,7 +55,7 @@ class VoidOwner(TxFactory):
 
     @staticmethod
     def gas(code=None):
-        return 700000
+        return 500000
 
 
     def constructor(self, sender_address):
