@@ -28,7 +28,7 @@ from chainlib.eth.connection import EthHTTPConnection
 from chainlib.eth.tx import receipt
 
 # local imports
-from eth_owned.void import VoidOwner
+from eth_owned.owned import Owned
 
 logging.basicConfig(level=logging.WARNING)
 logg = logging.getLogger()
@@ -105,7 +105,6 @@ def main():
         sys.stderr.write('EVM revert while transferring ownership')
         sys.exit(1)
 
-    c = VoidOwner(chain_spec, signer=signer, gas_oracle=gas_oracle, nonce_oracle=nonce_oracle)
     (tx_hash_hex, o) = c.take_ownership(signer_address, void_receiver_address)
     rpc.do(o)
     r = rpc.wait(tx_hash_hex)

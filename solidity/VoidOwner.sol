@@ -6,7 +6,7 @@ contract VoidOwner {
 
 	event OwnershipTaken(address _result);
 
-//	function omNom(address _contract) public returns (bool) {
+	// Implements OwnedTaker
 	function takeOwnership(address _contract) public returns (bool) {
 		bool ok;
 		bytes memory result;
@@ -22,5 +22,16 @@ contract VoidOwner {
 		
 		emit OwnershipTaken(_contract);
 		return ok;
+	}
+
+	// Implements EIP165
+	function supportsInterface(bytes4 _sum) public pure returns (bool) {
+		if (_sum == 0x6b578339) { // OwnedTaker
+			return true;
+		}
+		if (_sum == 0x01ffc9a7) { // EIP165
+			return true;
+		}
+		return false;
 	}
 }
