@@ -6,7 +6,8 @@ contract VoidOwner {
 
 	event OwnershipTaken(address _result);
 
-	function omNom(address _contract) public returns (bool) {
+//	function omNom(address _contract) public returns (bool) {
+	function takeOwnership(address _contract) public returns (bool) {
 		bool ok;
 		bytes memory result;
 		address newOwner;

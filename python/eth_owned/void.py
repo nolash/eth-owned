@@ -63,15 +63,3 @@ class VoidOwner(TxFactory):
         tx = self.template(sender_address, None, use_nonce=True)
         tx = self.set_code(tx, code)
         return self.build(tx)
-
-
-    def take_ownership(self, sender_address, contract_address, address, tx_format=TxFormat.JSONRPC):
-        enc = ABIContractEncoder()
-        enc.method('omNom')
-        enc.typ(ABIContractType.ADDRESS)
-        enc.address(address)
-        data = enc.get()
-        tx = self.template(sender_address, contract_address, use_nonce=True)
-        tx = self.set_code(tx, data)
-        tx = self.finalize(tx, tx_format)        
-        return tx

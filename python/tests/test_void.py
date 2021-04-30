@@ -74,7 +74,7 @@ class Test(EthTesterCase):
         txf = TxFactory(self.chain_spec, signer=self.signer, nonce_oracle=nonce_oracle)
 
         c = Owned(self.chain_spec, signer=self.signer, nonce_oracle=nonce_oracle)
-        (tx_hash_hex, o) = c.transfer_ownership(self.accounts[0], self.owned_demo_address, self.accounts[1])
+        (tx_hash_hex, o) = c.transfer_ownership(self.owned_demo_address, self.accounts[0], self.accounts[1])
         r = self.conn.do(o)
 
         o = receipt(tx_hash_hex)
@@ -83,7 +83,7 @@ class Test(EthTesterCase):
 
         nonce_oracle = RPCNonceOracle(self.accounts[1], self.conn)
         c = Owned(self.chain_spec, signer=self.signer, nonce_oracle=nonce_oracle)
-        (tx_hash_hex, o) = c.accept_ownership(self.accounts[1], self.owned_demo_address)
+        (tx_hash_hex, o) = c.accept_ownership(self.owned_demo_address, self.accounts[1])
        
         r = self.conn.do(o)
 
@@ -102,26 +102,23 @@ class Test(EthTesterCase):
         txf = TxFactory(self.chain_spec, signer=self.signer, nonce_oracle=nonce_oracle)
 
         c = Owned(self.chain_spec, signer=self.signer, nonce_oracle=nonce_oracle)
-        (tx_hash_hex, o) = c.transfer_ownership(self.accounts[0], self.owned_demo_address, self.address)
+        (tx_hash_hex, o) = c.transfer_ownership(self.owned_demo_address, self.accounts[0], self.address)
         r = self.conn.do(o)
 
         o = receipt(tx_hash_hex)
         r = self.conn.do(o)
         self.assertEqual(r['status'], 1)
 
-        c = VoidOwner(self.chain_spec, signer=self.signer, nonce_oracle=nonce_oracle)
-        (tx_hash_hex, o) = c.take_ownership(self.accounts[0], self.address, self.owned_demo_address)
-
+        (tx_hash_hex, o) = c.take_ownership(self.address, self.accounts[0], self.owned_demo_address)
         r = self.conn.do(o)
 
         o = receipt(tx_hash_hex)
         r = self.conn.do(o)
         self.assertEqual(r['status'], 1)
 
-        c = Owned(self.chain_spec, signer=self.signer, nonce_oracle=nonce_oracle)
         o = c.owner(self.owned_demo_address, sender_address=self.accounts[0])
-
         r = self.conn.do(o)
+
         owner_address = abi_decode_single(ABIContractType.ADDRESS, r)
         self.assertEqual(owner_address, self.address)
 
