@@ -1,0 +1,4 @@
+- 0.0.2
+	* Move to chainlib-eth
+- 0.0.1
+	* Extract code from chainlib

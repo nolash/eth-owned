@@ -10,7 +10,7 @@ from chainlib.eth.contract import (
         ABIContractType,
         abi_decode_single,
     )
-from chainlib.jsonrpc import jsonrpc_template
+from chainlib.jsonrpc import JSONRPCRequest
 from chainlib.eth.tx import (
         TxFactory,
         TxFormat,
@@ -31,8 +31,9 @@ class EIP173(TxFactory):
         return tx
 
 
-    def owner(self, contract_address, sender_address=ZERO_ADDRESS):
-        o = jsonrpc_template()
+    def owner(self, contract_address, sender_address=ZERO_ADDRESS, id_generator=None):
+        j = JSONRPCRequest(id_generator)
+        o = j.template()
         o['method'] = 'eth_call'
         enc = ABIContractEncoder()
         enc.method('owner')
@@ -41,6 +42,7 @@ class EIP173(TxFactory):
         tx = self.set_code(tx, data)
         o['params'].append(self.normalize(tx))
         o['params'].append('latest')
+        o = j.finalize(o)
         return o
 
 

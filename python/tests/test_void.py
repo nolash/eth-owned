@@ -19,7 +19,6 @@ from chainlib.eth.contract import (
         abi_decode_single,
         ABIContractType,
         )
-from chainlib.jsonrpc import jsonrpc_template
 from chainlib.eth.contract import (
         ABIContractEncoder,
         )
@@ -27,10 +26,8 @@ from hexathon import add_0x
 
 # local imports
 from eth_owned.void import VoidOwner
-from eth_owned import (
-        Owned,
-        data_dir,
-        )
+from eth_owned.owned import Owned
+from eth_owned import data_dir
 
 logging.basicConfig(level=logging.DEBUG)
 logg = logging.getLogger()

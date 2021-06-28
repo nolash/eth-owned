@@ -15,9 +15,6 @@ from chainlib.eth.contract import (
         abi_decode_single,
         )
 from chainlib.eth.constant import ZERO_ADDRESS
-from chainlib.jsonrpc import (
-        jsonrpc_template,
-        )
 from chainlib.eth.error import RequestMismatchException
 from hexathon import (
         add_0x,
