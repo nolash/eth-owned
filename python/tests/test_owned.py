@@ -12,6 +12,7 @@ from chainlib.eth.tx import (
         TxFactory,
         receipt,
         )
+from hexathon import strip_0x
 
 # local imports
 from eth_owned.owned import (
@@ -54,7 +55,7 @@ class TestOwned(EthTesterCase):
         o = c.owner(self.address, sender_address=self.accounts[0])
         r = self.conn.do(o)
         owner = c.parse_owner(r)
-        self.assertEqual(owner, self.accounts[0])
+        self.assertEqual(owner, strip_0x(self.accounts[0]))
 
 
     def test_transfer_ownership(self):
@@ -106,7 +107,7 @@ class TestOwned(EthTesterCase):
         o = c.owner(self.address, sender_address=self.accounts[0])
         r = self.conn.do(o)
         owner = c.parse_owner(r)
-        self.assertEqual(owner, self.accounts[1])
+        self.assertEqual(owner, strip_0x(self.accounts[1]))
 
 
     def test_take_ownership(self):
@@ -126,7 +127,7 @@ class TestOwned(EthTesterCase):
         o = c.owner(self.address, sender_address=self.accounts[0])
         r = self.conn.do(o)
         owner = c.parse_owner(r)
-        self.assertEqual(owner, self.address)
+        self.assertEqual(owner, strip_0x(self.address))
 
 
 if __name__ == '__main__':

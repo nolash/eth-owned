@@ -22,7 +22,10 @@ from chainlib.eth.contract import (
 from chainlib.eth.contract import (
         ABIContractEncoder,
         )
-from hexathon import add_0x
+from hexathon import (
+        add_0x,
+        strip_0x,
+        )
 
 # local imports
 from eth_owned.void import VoidOwner
@@ -91,7 +94,7 @@ class Test(EthTesterCase):
         o = c.owner(self.owned_demo_address, sender_address=self.accounts[0])
         r = self.conn.do(o)
         owner_address = abi_decode_single(ABIContractType.ADDRESS, r)
-        self.assertEqual(owner_address, self.accounts[1])
+        self.assertEqual(owner_address, strip_0x(self.accounts[1]))
 
 
     def test_void(self):
@@ -117,7 +120,7 @@ class Test(EthTesterCase):
         r = self.conn.do(o)
 
         owner_address = abi_decode_single(ABIContractType.ADDRESS, r)
-        self.assertEqual(owner_address, self.address)
+        self.assertEqual(owner_address, strip_0x(self.address))
 
 
 if __name__ == '__main__':

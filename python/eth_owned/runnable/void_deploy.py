@@ -12,9 +12,9 @@ import json
 import argparse
 import logging
 
-# third-party imports
-from crypto_dev_signer.eth.signer import ReferenceSigner as EIP155Signer
-from crypto_dev_signer.keystore.dict import DictKeystore
+# external imports
+from funga.eth.signer import EIP155Signer
+from funga.eth.keystore.dict import DictKeystore
 from chainlib.chain import ChainSpec
 from chainlib.eth.nonce import (
         RPCNonceOracle,
