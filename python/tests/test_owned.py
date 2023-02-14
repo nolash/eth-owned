@@ -130,5 +130,20 @@ class TestOwned(EthTesterCase):
         self.assertEqual(owner, strip_0x(self.address))
 
 
+    def test_ownership_final(self):
+        nonce_oracle = RPCNonceOracle(self.accounts[0], self.conn)
+        gas_oracle = OverrideGasOracle(limit=8000000, conn=self.conn)
+        c = Owned(self.chain_spec, nonce_oracle=nonce_oracle, gas_oracle=gas_oracle, signer=self.signer)
+        (tx_hash_hex, o) = c.transfer_ownership(self.address, self.accounts[0], self.accounts[1], final=True)
+        r = self.conn.do(o)
+
+        c = Owned(self.chain_spec, nonce_oracle=nonce_oracle, gas_oracle=gas_oracle, signer=self.signer)
+        (tx_hash_hex, o) = c.transfer_ownership(self.address, self.accounts[0], self.accounts[1], final=True)
+        r = self.conn.do(o)
+        o = receipt(tx_hash_hex)
+        r = self.conn.do(o)
+        self.assertEqual(r['status'], 0)
+
+
 if __name__ == '__main__':
     unittest.main()

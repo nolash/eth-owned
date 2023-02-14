@@ -19,9 +19,12 @@ from chainlib.eth.constant import ZERO_ADDRESS
 
 class EIP173(TxFactory):
 
-    def transfer_ownership(self, contract_address, sender_address, new_owner_address, tx_format=TxFormat.JSONRPC):
+    def transfer_ownership(self, contract_address, sender_address, new_owner_address, final=False, tx_format=TxFormat.JSONRPC):
         enc = ABIContractEncoder()
-        enc.method('transferOwnership')
+        if final:
+            enc.method('transferOwnershipFinal')
+        else:
+            enc.method('transferOwnership')
         enc.typ(ABIContractType.ADDRESS)
         enc.address(new_owner_address)
         data = add_0x(enc.get())
