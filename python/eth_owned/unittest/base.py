@@ -13,8 +13,7 @@ from chainlib.eth.tx import receipt
 from hexathon import strip_0x
 
 # local imports
-from eth_owned.owned import EIP173
-from eth_owned.owned import Owned
+from eth_owned import ERC173
 
 logging.basicConfig(level=logging.DEBUG)
 logg = logging.getLogger()

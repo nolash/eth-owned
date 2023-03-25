@@ -15,10 +15,7 @@ from chainlib.eth.tx import (
 from hexathon import strip_0x
 
 # local imports
-from eth_owned.owned import (
-        EIP173,
-        Owned,
-        )
+from eth_owned.owned import ERC173
 
 logging.basicConfig(level=logging.DEBUG)
 logg = logging.getLogger()
@@ -29,7 +26,7 @@ script_dir = os.path.realpath(os.path.dirname(__file__))
 class TestInterface: #(EthTesterCase):
 
     def test_owned(self):
-        c = EIP173(self.chain_spec)
+        c = ERC173(self.chain_spec)
         o = c.owner(self.address, sender_address=self.accounts[0])
         r = self.conn.do(o)
         owner = c.parse_owner(r)
@@ -39,7 +36,7 @@ class TestInterface: #(EthTesterCase):
     def test_transfer_ownership(self):
         nonce_oracle = RPCNonceOracle(self.accounts[2], self.conn)
         gas_oracle = OverrideGasOracle(limit=8000000, conn=self.conn)
-        c = EIP173(self.chain_spec, nonce_oracle=nonce_oracle, gas_oracle=gas_oracle, signer=self.signer)
+        c = ERC173(self.chain_spec, nonce_oracle=nonce_oracle, gas_oracle=gas_oracle, signer=self.signer)
         (tx_hash_hex, o) = c.transfer_ownership(self.address, self.accounts[2], self.accounts[1])
         r = self.conn.do(o)
 
@@ -48,7 +45,7 @@ class TestInterface: #(EthTesterCase):
         self.assertEqual(r['status'], 0)
         
         nonce_oracle = RPCNonceOracle(self.accounts[0], self.conn)
-        c = EIP173(self.chain_spec, nonce_oracle=nonce_oracle, gas_oracle=gas_oracle, signer=self.signer)
+        c = ERC173(self.chain_spec, nonce_oracle=nonce_oracle, gas_oracle=gas_oracle, signer=self.signer)
         (tx_hash_hex, o) = c.transfer_ownership(self.address, self.accounts[0], self.accounts[1])
         r = self.conn.do(o)
 

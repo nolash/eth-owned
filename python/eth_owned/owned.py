@@ -17,7 +17,7 @@ from chainlib.eth.tx import (
         )
 from chainlib.eth.constant import ZERO_ADDRESS
 
-class EIP173(TxFactory):
+class ERC173(TxFactory):
 
     def transfer_ownership(self, contract_address, sender_address, new_owner_address, final=False, tx_format=TxFormat.JSONRPC):
         enc = ABIContractEncoder()
@@ -52,27 +52,3 @@ class EIP173(TxFactory):
     @classmethod
     def parse_owner(self, v):
         return abi_decode_single(ABIContractType.ADDRESS, v)
-
-
-class Owned(EIP173):
-
-    def accept_ownership(self, contract_address, sender_address, tx_format=TxFormat.JSONRPC):
-        enc = ABIContractEncoder()
-        enc.method('acceptOwnership')
-        data = add_0x(enc.get())
-        tx = self.template(sender_address, contract_address, use_nonce=True)
-        tx = self.set_code(tx, data)
-        tx = self.finalize(tx, tx_format)
-        return tx
-
-
-    def take_ownership(self, contract_address, sender_address, resource_address, tx_format=TxFormat.JSONRPC):
-        enc = ABIContractEncoder()
-        enc.method('takeOwnership')
-        enc.typ(ABIContractType.ADDRESS)
-        enc.address(resource_address)
-        data = add_0x(enc.get())
-        tx = self.template(sender_address, contract_address, use_nonce=True)
-        tx = self.set_code(tx, data)
-        tx = self.finalize(tx, tx_format)
-        return tx

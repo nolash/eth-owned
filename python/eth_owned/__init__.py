@@ -1,2 +1,2 @@
-from .owned import EIP173, Owned, Owned
+from .owned import ERC173
 from eth_owned.data import data_dir
