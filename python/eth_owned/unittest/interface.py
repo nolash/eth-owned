@@ -124,6 +124,5 @@ class TestInterface: #(EthTesterCase):
 #        r = self.conn.do(o)
 #        self.assertEqual(r['status'], 0)
 
-
 if __name__ == '__main__':
     unittest.main()
